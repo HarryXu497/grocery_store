@@ -2,14 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroceryItem {
   final String category;
-  final String imageURL;
+  final List<String> imageURLs;
   final String name;
-  final int quantity;
+  final String quantity;
   final double price;
 
   GroceryItem({
     required this.category,
-    required this.imageURL,
+    required this.imageURLs,
     required this.name,
     required this.quantity,
     required this.price,
@@ -17,15 +17,15 @@ class GroceryItem {
 
   GroceryItem.fromFirebase(DocumentSnapshot<Map<String, dynamic>> snapshot)
       : category = snapshot.get("category"),
-        imageURL = snapshot.get("imageURL"),
+        imageURLs = List<String>.from(snapshot.get("imageURLs")),
         name = snapshot.get("name"),
-        quantity = snapshot.get("quantity") as int,
+        quantity = snapshot.get("quantity"),
         price = snapshot.get("price") as double;
 
   Map<String, Object?> toFirebase() {
     return {
       "category": category,
-      "imageURL": imageURL,
+      "imageURLs": imageURLs,
       "name": name,
       "quantity": quantity,
       "price": price,

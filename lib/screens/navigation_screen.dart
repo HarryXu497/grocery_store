@@ -1,7 +1,5 @@
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:grocery_store/screens/account_screen.dart';
 import 'package:grocery_store/screens/browse_screen.dart';
 import 'package:grocery_store/screens/cart_screen.dart';
 import 'package:grocery_store/screens/search_screen.dart';

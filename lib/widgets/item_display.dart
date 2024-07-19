@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_store/models/grocery_item.dart';
+import 'package:grocery_store/screens/item_screen.dart';
 
 class ItemDisplay extends StatelessWidget {
   final GroceryItem item;
@@ -18,12 +19,16 @@ class ItemDisplay extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         child: InkWell(
           onTap: () {
-            print("Tap.");
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (context) => ItemScreen(item: item),
+              ),
+            );
           },
           child: Stack(
             children: [
               CoverImage(item: item),
-              CardText(item: item)
+              CardText(item: item),
             ],
           ),
         ),
@@ -101,10 +106,13 @@ class CoverImage extends StatelessWidget {
             topLeft: Radius.circular(10.0),
             topRight: Radius.circular(10.0),
           ),
-          child: Image.network(
-            item.imageURL,
-            height: 140,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: 'item-image',
+            child: Image.network(
+              item.imageURLs[0],
+              height: 140,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),

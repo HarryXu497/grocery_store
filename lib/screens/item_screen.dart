@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grocery_store/firebase/auth.dart';
 import 'package:grocery_store/firebase/firestore.dart';
@@ -12,14 +13,63 @@ class ItemScreen extends StatelessWidget {
     required this.item,
   });
 
-  void _onPressed() {
+  Future<void> _onPressed() async {
     if (auth.currentUser == null) {
       return;
     }
 
-    final cartItems = firestore.collection("carts").doc(auth.currentUser!.uid).collection("items");
-    
-    
+    final cartItems = firestore
+        .collection("carts")
+        .doc(auth.currentUser!.uid)
+        .collection("items");
+
+    final itemDocRef = firestore.collection("items").doc(item.id);
+
+    final itemQuery = cartItems.where("item", isEqualTo: itemDocRef);
+
+    final resultItems = await itemQuery.get();
+
+    if (resultItems.size == 0) {
+      // Item not yet added to cart
+      await cartItems.add({
+        "item": itemDocRef,
+        "quantity": 1,
+      });
+    } else if (resultItems.size == 1) {
+      // Update existing doc - increment quantity
+      final itemDoc = resultItems.docs.first;
+
+      await itemDoc.reference.set({
+        "quantity": itemDoc.get("quantity") + 1,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  void _showSnackBar(BuildContext context) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "'${item.name}' has been added to your cart.",
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).clearSnackBars();
+              },
+              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimary,),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -39,7 +89,7 @@ class ItemScreen extends StatelessWidget {
             ItemHeader(item: item),
             const SizedBox(height: 4.0),
             Hero(
-              tag: 'item-image',
+              tag: "item-image-${item.id}",
               child: ItemImageCarousel(item: item),
             ),
             const SizedBox(height: 8.0),
@@ -60,7 +110,11 @@ class ItemScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4.0),
             TextButton(
-              onPressed: _onPressed,
+              onPressed: () async {
+                await _onPressed();
+
+                _showSnackBar(context);
+              },
               style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all<Color>(
                     Theme.of(context).colorScheme.primary,

@@ -107,7 +107,7 @@ class CoverImage extends StatelessWidget {
             topRight: Radius.circular(10.0),
           ),
           child: Hero(
-            tag: 'item-image',
+            tag: "item-image-${item.id}",
             child: Image.network(
               item.imageURLs[0],
               height: 140,

@@ -38,6 +38,8 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final _searchController = SearchController();
+  final _focusNode = FocusNode();
   var _itemsStream = searchStream(null).snapshots().map(categoryMapper);
 
   @override
@@ -47,26 +49,25 @@ class _SearchScreenState extends State<SearchScreen> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: SearchAnchor(
+            viewOnSubmitted: (input) {
+              _searchController.closeView(input);
+              _focusNode.unfocus();
+
+              setState(() {
+                _itemsStream =
+                    searchStream(input).snapshots().map(categoryMapper);
+              });
+            },
+            searchController: _searchController,
             builder: (context, controller) {
               return SearchBar(
+                focusNode: _focusNode,
                 controller: controller,
-                onSubmitted: (input) {
-                  print(input);
-                  controller.closeView(input);
-                },
                 padding: const WidgetStatePropertyAll<EdgeInsets>(
                   EdgeInsets.symmetric(horizontal: 16.0),
                 ),
                 onTap: () {
                   controller.openView();
-                },
-                onChanged: (input) {
-                  controller.openView();
-
-                  setState(() {
-                    _itemsStream =
-                        searchStream(input).snapshots().map(categoryMapper);
-                  });
                 },
                 leading: const Icon(Icons.search),
               );
@@ -83,6 +84,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   onTap: () {
                     setState(() {
                       controller.closeView(name);
+                      _focusNode.unfocus();
+
+                      setState(() {
+                        _itemsStream =
+                            searchStream(name).snapshots().map(categoryMapper);
+                      });
                     });
                   },
                 );

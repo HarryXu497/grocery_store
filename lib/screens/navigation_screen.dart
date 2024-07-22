@@ -17,7 +17,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   static final List<Widget> _screens = [
     BrowseScreen(),
     const SearchScreen(),
-    const CartScreen(),
+    CartScreen(),
   ];
 
   static const List<Widget> _appBars = [
@@ -78,6 +78,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
           });
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _selectedIndex == 2 ? const CheckOutButton() : null,
     );
   }
 }

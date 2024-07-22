@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grocery_store/firebase/auth.dart';
 import 'package:grocery_store/firebase/firestore.dart';
+import 'package:grocery_store/models/cart_item.dart';
 import 'package:grocery_store/models/grocery_item.dart';
 
 class ItemScreen extends StatelessWidget {
@@ -18,37 +19,29 @@ class ItemScreen extends StatelessWidget {
       return;
     }
 
-    final cartItems = firestore
+    final cartItemDoc = firestore
         .collection("carts")
         .doc(auth.currentUser!.uid)
-        .collection("items");
+        .collection("items")
+        .doc(item.id)
+        .withConverter<CartGroceryItem>(
+          fromFirestore: (snapshot, _) =>
+              CartGroceryItem.fromFirebase(snapshot),
+          toFirestore: (model, _) => model.toFirebase(),
+        );
 
-    final itemDocRef = firestore.collection("items").doc(item.id);
+    final snapshot = await cartItemDoc.get();
 
-    final itemQuery = cartItems.where("item", isEqualTo: itemDocRef);
+    final quantitySelected = snapshot.exists ? snapshot.get("quantitySelected") as int : 0;
 
-    final resultItems = await itemQuery.get();
-
-    if (resultItems.size == 0) {
-      // Item not yet added to cart
-      await cartItems.add({
-        "item": itemDocRef,
-        "quantity": 1,
-      });
-    } else if (resultItems.size == 1) {
-      // Update existing doc - increment quantity
-      final itemDoc = resultItems.docs.first;
-
-      await itemDoc.reference.set({
-        "quantity": itemDoc.get("quantity") + 1,
-      }, SetOptions(merge: true));
-    }
+    cartItemDoc.set(CartGroceryItem(item: item, quantitySelected: quantitySelected + 1));
   }
 
   void _showSnackBar(BuildContext context) {
     if (!context.mounted) {
       return;
     }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -57,14 +50,17 @@ class ItemScreen extends StatelessWidget {
             Text(
               "'${item.name}' has been added to your cart.",
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
             ),
             IconButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
               },
-              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimary,),
+              icon: Icon(
+                Icons.close,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
           ],
         ),
@@ -116,16 +112,18 @@ class ItemScreen extends StatelessWidget {
                 _showSnackBar(context);
               },
               style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                  minimumSize: WidgetStateProperty.all<Size>(
-                    const Size(double.infinity, 30.0),
-                  ),
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
+                backgroundColor: WidgetStateProperty.all<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
+                minimumSize: WidgetStateProperty.all<Size>(
+                  const Size(double.infinity, 30.0),
+                ),
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4.0),
-                  ))),
+                  ),
+                ),
+              ),
               child: Text(
                 "Add to Cart",
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(

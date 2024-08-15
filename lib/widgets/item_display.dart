@@ -57,19 +57,24 @@ class CardText extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                item.name,
-                style: Theme.of(context).textTheme.bodyLarge,
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Text(
                 item.quantity.toString(),
                 style: Theme.of(context).textTheme.bodyLarge,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
           Text(
             "\$${item.price}",
             style: Theme.of(context).textTheme.bodyMedium,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

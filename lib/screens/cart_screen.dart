@@ -1,3 +1,8 @@
+import 'dart:convert';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -59,11 +64,14 @@ class CartScreen extends StatelessWidget {
         content: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "'${cartItem.item.name}' has been removed from your cart.",
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+            Expanded(
+              child: Text(
+                "'${cartItem.item.name}' has been removed from your cart.",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             IconButton(
               onPressed: () {
@@ -206,7 +214,85 @@ class CartScreen extends StatelessWidget {
 }
 
 class CheckOutButton extends StatelessWidget {
-  const CheckOutButton({super.key});
+  CheckOutButton({super.key});
+
+  late Map<String, dynamic>? _paymentIntent;
+
+  Future<double> _calculateTotal() async {
+    CollectionReference<CartGroceryItem> cart = getCart();
+
+    QuerySnapshot<CartGroceryItem> snapshot = await cart.get();
+
+    final subtotal = snapshot.docs
+        .map((cartItem) =>
+            (cartItem.get("quantitySelected") as int) *
+            (cartItem.get("price") as double))
+        .sum;
+
+    return subtotal * (taxRate + 1);
+  }
+
+  Future<void> _makePayment() async {
+    final total = await _calculateTotal();
+
+    try {
+      _paymentIntent = await _createPaymentIntent(total, "USD");
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: _paymentIntent!["client_secret"],
+          style: ThemeMode.light,
+          merchantDisplayName: "GroceryStore",
+        ),
+      );
+
+      _displayPaymentSheet();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  int _calculateAmount(double amount) {
+    return (amount * 100).floor();
+  }
+
+  Future<Map<String, dynamic>> _createPaymentIntent(
+      double amount, String currency) async {
+    if (dotenv.env["STRIPE_SECRET"] == null) {
+      throw ArgumentError(
+          "The environment variable 'STRIPE_SECRET' does not exist.");
+    }
+
+    try {
+      Map<String, dynamic> body = {
+        "amount": _calculateAmount(amount).toString(),
+        "currency": currency,
+      };
+
+      final response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        headers: {
+          "Authorization": "Bearer ${dotenv.env["STRIPE_SECRET"]!}",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body,
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _displayPaymentSheet() async {
+    try {
+      await Stripe.instance.presentPaymentSheet();
+      
+      _paymentIntent = null;
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +311,7 @@ class CheckOutButton extends StatelessWidget {
           foregroundColor: WidgetStatePropertyAll<Color>(
               Theme.of(context).colorScheme.onPrimary),
         ),
-        onPressed: () {},
+        onPressed: _makePayment,
         child: const Center(
           child: Text("Check out now!"),
         ),

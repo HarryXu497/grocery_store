@@ -79,7 +79,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _selectedIndex == 2 ? const CheckOutButton() : null,
+      floatingActionButton: _selectedIndex == 2 ? CheckOutButton() : null,
     );
   }
 }

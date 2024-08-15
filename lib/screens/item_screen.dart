@@ -46,11 +46,14 @@ class ItemScreen extends StatelessWidget {
         content: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "'${item.name}' has been added to your cart.",
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+            Expanded(
+              child: Text(
+                "'${item.name}' has been added to your cart.",
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             IconButton(
               onPressed: () {

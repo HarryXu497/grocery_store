@@ -47,6 +47,7 @@ dependencies:
   collection: ^1.18.0
   carousel_slider: ^4.2.1
   flutter_stripe: ^11.0.0
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

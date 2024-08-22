@@ -257,7 +257,9 @@ class CheckOutButton extends StatelessWidget {
   }
 
   Future<Map<String, dynamic>> _createPaymentIntent(
-      double amount, String currency) async {
+    double amount,
+    String currency,
+  ) async {
     if (dotenv.env["STRIPE_SECRET"] == null) {
       throw ArgumentError(
           "The environment variable 'STRIPE_SECRET' does not exist.");
@@ -287,7 +289,7 @@ class CheckOutButton extends StatelessWidget {
   Future<void> _displayPaymentSheet() async {
     try {
       await Stripe.instance.presentPaymentSheet();
-      
+
       _paymentIntent = null;
     } catch (e) {
       rethrow;

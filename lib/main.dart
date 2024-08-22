@@ -7,7 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 final colorScheme = ColorScheme.fromSeed(
-  seedColor: Color.fromARGB(255, 240, 240, 240),
+  seedColor: const Color.fromARGB(255, 240, 240, 240),
   brightness: Brightness.light,
 );
 

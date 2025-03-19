@@ -1,3 +1,3 @@
 # grocery_store
 
-A Grocery Store Application written in Dart & Flutter with Firebase as the backend.
+A Grocery Store Mobile Application written in Dart & Flutter with Firebase as the backend.
